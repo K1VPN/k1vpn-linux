@@ -1,0 +1,14 @@
+#!/bin/sh
+# Chromium keeps its own sandbox (browser-support with allow-sandbox); never
+# add --no-sandbox here.
+# Chromium hands the status icon to the desktop as a file in a temporary
+# directory. The Snap's private /tmp is invisible to the host shell, which
+# then shows placeholder dots; $XDG_RUNTIME_DIR is the same path on both sides.
+if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+  # On a fresh login/install snapd may not have created snap.k1vpn yet.
+  # Do this before Chromium caches its temporary directory for the process.
+  if mkdir -p -m 700 "$XDG_RUNTIME_DIR" && [ -w "$XDG_RUNTIME_DIR" ]; then
+    export TMPDIR="$XDG_RUNTIME_DIR"
+  fi
+fi
+exec "$SNAP/k1vpn/k1vpn" "$@"

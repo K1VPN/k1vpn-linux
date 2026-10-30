@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+
+# JavaScript and Electron build output
+dist/
+out/
+release/
+*.AppImage
+*.deb
+*.rpm
+*.snap
+.snap-build/
+parts/
+stage/
+prime/
+
+# Rust build output
+target/
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Runtime state
+credentials.dat
+preferences.json
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test and coverage output
+coverage/
+*.lcov
+
+# Temporary files
+tmp/
+temp/
+*.log

@@ -1,0 +1,144 @@
+name: k1vpn
+title: K1VPN
+base: core26
+version: '1.0.0'
+summary: K1VPN secure VPN client
+description: |
+  Official K1VPN client for Linux: full-tunnel WireGuard with a kill switch,
+  DNS inside the tunnel and per-request polkit authorization.
+license: GPL-3.0-only
+contact: https://k1vpn.com/en/contact/
+issues: https://github.com/K1VPN/k1vpn-linux/issues
+source-code: https://github.com/K1VPN/k1vpn-linux
+website: https://k1vpn.com/en/
+grade: stable
+confinement: strict
+platforms:
+  amd64:
+
+plugs:
+  browser-sandbox:
+    interface: browser-support
+    allow-sandbox: true
+  k1vpn-polkit:
+    interface: polkit
+    action-prefix: com.k1vpn
+
+apps:
+  k1vpn:
+    command: bin/k1vpn-launch
+    extensions: [gnome]
+    autostart: com.k1vpn.linux.desktop
+    plugs:
+      - network
+      - desktop
+      - desktop-legacy
+      - wayland
+      - x11
+      - opengl
+      - gsettings
+      - browser-sandbox
+      - password-manager-service
+
+  k1vpnd:
+    command: bin/k1vpnd
+    daemon: simple
+    install-mode: enable
+    restart-condition: on-failure
+    stop-timeout: 120s
+    plugs:
+      - network
+      - network-bind
+      - network-control
+      - firewall-control
+      # Creates a volatile VPN connection when NetworkManager is usable;
+      # the direct backend otherwise keeps its interface unmanaged.
+      - network-manager
+      - k1vpn-polkit
+
+parts:
+  k1vpnd:
+    plugin: nil
+    source: .snap-build/daemon
+    build-packages: [build-essential, pkg-config]
+    build-snaps: [rustup]
+    override-build: |
+      # Use the build container's toolchain explicitly. GNOME's SDK environment
+      # must not shadow rustup or inject its libraries into the compiler.
+      env -u LD_LIBRARY_PATH PATH=/usr/bin:/bin:/usr/sbin:/sbin:/snap/bin \
+        /snap/bin/rustup toolchain install stable --profile minimal --no-self-update
+      env -u LD_LIBRARY_PATH PATH=/usr/bin:/bin:/usr/sbin:/sbin:/snap/bin \
+        /snap/bin/rustup run stable cargo build --release --locked --target-dir "$CRAFT_PART_BUILD/target"
+      install -D -m 0755 target/release/k1vpnd "$CRAFT_PART_INSTALL/bin/k1vpnd"
+
+  networking-tools:
+    after: [k1vpnd]
+    # k1vpnd runs exactly three tools, staged below $SNAP and never resolved
+    # on the host: wg, ip and nft. It configures DNS and NetworkManager over
+    # D-Bus itself, so no shell, wg-quick, sysctl or resolvconf is shipped.
+    plugin: nil
+    build-packages: [wireguard-tools, nftables, iproute2]
+    # Staged only for the libraries the three tools need.
+    stage-packages:
+      - wireguard-tools
+      - nftables
+      - iproute2
+    prime:
+      - -bin
+      - -sbin
+      - -usr/bin
+      - -usr/sbin
+      - -etc
+      - -usr/lib/x86_64-linux-gnu/tc
+      - -usr/lib/systemd
+      - -usr/share/man
+      - -usr/share/bash-completion
+    override-build: |
+      set -eu
+      # Snapcraft may filter binaries also present in core26. Copy the known
+      # core26 build-package tools explicitly to the daemon's fixed paths.
+      export PATH=/usr/bin:/usr/sbin:/bin:/sbin
+      for tool in wg ip nft; do
+        install -D -m 0755 "$(command -v "$tool")" "$CRAFT_PART_INSTALL/libexec/k1vpn-tools/$tool"
+      done
+
+      for package in wireguard-tools nftables iproute2; do
+        install -D -m 0644 "/usr/share/doc/$package/copyright" \
+          "$CRAFT_PART_INSTALL/usr/share/doc/$package/copyright"
+      done
+    override-prime: |
+      craftctl default
+      for tool in wg ip nft; do
+        test -x "$CRAFT_PRIME/libexec/k1vpn-tools/$tool" || { echo "missing $tool" >&2; exit 1; }
+      done
+
+  application:
+    plugin: dump
+    source: .snap-build/application
+    source-type: local
+    # NSS, NSPR and ALSA come from the gnome-core26 content snap. gdbus is
+    # staged because core26 has none; the tray probe runs it.
+    stage-packages:
+      - libglib2.0-bin
+    prime:
+      # Only gdbus is used, by the status-icon probe.
+      - -usr/bin/gapplication
+      - -usr/bin/gio
+      - -usr/bin/gresource
+      - -usr/bin/gsettings
+      - -usr/share/man
+      - -usr/share/bash-completion
+
+  launcher:
+    plugin: nil
+    source: snap/local
+    override-build: |
+      install -d "$CRAFT_PART_INSTALL/bin"
+      install -m 0755 k1vpn-launch "$CRAFT_PART_INSTALL/bin/k1vpn-launch"
+
+  polkit-policy:
+    plugin: nil
+    source: packaging/polkit
+    override-build: |
+      install -D -m 0644 com.k1vpn.policy \
+        "$CRAFT_PART_INSTALL/meta/polkit/k1vpn-polkit.network-control.policy"

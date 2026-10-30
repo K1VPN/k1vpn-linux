@@ -1,0 +1,100 @@
+{
+  "name": "k1vpn-linux",
+  "version": "1.0.0",
+  "description": "Official K1VPN client for Linux",
+  "private": true,
+  "main": "./out/main/index.js",
+  "desktopName": "k1vpn.desktop",
+  "author": "K1VPN LLC",
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/K1VPN/k1vpn-linux.git"
+  },
+  "bugs": "https://github.com/K1VPN/k1vpn-linux/issues",
+  "homepage": "https://github.com/K1VPN/k1vpn-linux",
+  "type": "module",
+  "scripts": {
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "test": "vitest run",
+    "dev": "electron-vite dev",
+    "build": "npm run typecheck && npm test && electron-vite build",
+    "snap:prepare": "node scripts/prepare-snap.mjs",
+    "package:snap": "node scripts/build-snap.mjs",
+    "daemon:check": "cargo check --locked --manifest-path daemon/Cargo.toml",
+    "daemon:test": "cargo test --locked --manifest-path daemon/Cargo.toml",
+    "postinstall": "install-electron"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "country-flag-icons": "1.6.20",
+    "electron": "45.1.0",
+    "electron-builder": "26.18.0",
+    "electron-vite": "6.0.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "typescript": "7.0.2",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  },
+  "engines": {
+    "node": ">=26.13.0",
+    "npm": ">=12.2.1"
+  },
+  "build": {
+    "appId": "com.k1vpn.linux",
+    "productName": "K1VPN",
+    "asar": true,
+    "electronFuses": {
+      "runAsNode": false,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "onlyLoadAppFromAsar": true
+    },
+    "artifactName": "k1vpn-${version}-${arch}.${ext}",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "packaging/icons/k1vpn.png",
+        "to": "icons/k1vpn.png"
+      },
+      {
+        "from": "src/renderer/src/assets/fonts/Inter-LICENSE.txt",
+        "to": "licenses/Inter-LICENSE.txt"
+      },
+      "LICENSE",
+      "NOTICE",
+      "THIRD_PARTY_NOTICES.md",
+      "TRADEMARKS.md"
+    ],
+    "linux": {
+      "target": [
+        "dir"
+      ],
+      "category": "Network",
+      "executableName": "k1vpn",
+      "syncDesktopName": true,
+      "icon": "packaging/icons/k1vpn.png",
+      "desktop": {
+        "entry": {
+          "Name": "K1VPN",
+          "Comment": "Secure VPN client for K1VPN",
+          "Categories": "Network;Security;",
+          "StartupWMClass": "k1vpn"
+        }
+      }
+    }
+  },
+  "packageManager": "npm@12.2.1"
+}
