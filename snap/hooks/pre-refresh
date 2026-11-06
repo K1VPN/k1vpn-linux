@@ -1,0 +1,10 @@
+#!/bin/sh
+# snapd runs this hook before it stops k1vpnd for a refresh. A connected
+# service then leaves the tunnel and its kill switch in place for the new
+# revision to adopt, instead of letting traffic leave the VPN while the new
+# revision starts. The service removes the marker when it starts again.
+set -eu
+run="$SNAP_COMMON/run"
+[ -d "$run" ] || exit 0
+: > "$run/refresh-pending.tmp"
+mv -f "$run/refresh-pending.tmp" "$run/refresh-pending"

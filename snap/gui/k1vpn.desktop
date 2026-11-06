@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=K1VPN
+Comment=Secure VPN client for K1VPN
+Exec=k1vpn
+Icon=${SNAP}/meta/gui/k1vpn.svg
+Terminal=false
+Categories=Network;Security;
+StartupWMClass=k1vpn
