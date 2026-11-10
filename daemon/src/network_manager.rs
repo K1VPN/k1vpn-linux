@@ -1,7 +1,7 @@
 //! The tunnel as a NetworkManager connection.
 //!
 //! On hosts with NetworkManager the service asks it to create the WireGuard
-//! connection, as Proton VPN does. The desktop then shows the VPN indicator,
+//! connection. The desktop then shows the VPN indicator,
 //! lists "K1VPN" in its network menu, and treats our disconnect as a user
 //! deactivation instead of reporting "Connection failed". The connection is
 //! volatile: NetworkManager keeps it, including the private key, only in

@@ -1,6 +1,6 @@
 # Security
 
-Supported version: 1.0.0.
+Supported version: the latest stable release of K1VPN for Linux.
 
 Report vulnerabilities through GitHub private vulnerability reporting or
 the [contact form](https://k1vpn.com/en/contact/). Include the affected version

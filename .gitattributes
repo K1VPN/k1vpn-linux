@@ -1,3 +1,5 @@
 * text=auto
 *.sh text eol=lf
 *.policy text eol=lf
+snap/local/k1vpn-launch text eol=lf
+snap/hooks/pre-refresh text eol=lf

@@ -1,6 +1,6 @@
 #!/bin/sh
-# Use Snap strict confinement without Chromium's internal sandbox, as
-# recommended by the Store review. This flag applies only to the Snap launcher.
+# Disable Chromium's internal sandbox to match browser-support's
+# allow-sandbox: false setting. Strict Snap confinement remains active.
 # Chromium hands the status icon to the desktop as a file in a temporary
 # directory. The Snap's private /tmp is invisible to the host shell, which
 # then shows placeholder dots; $XDG_RUNTIME_DIR is the same path on both sides.

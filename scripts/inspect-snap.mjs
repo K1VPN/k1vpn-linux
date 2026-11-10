@@ -12,6 +12,7 @@ const files = result.stdout.split('\n').filter(line => line.startsWith('squashfs
   .map(line => line.slice('squashfs-root/'.length))
 for (const required of [
   'meta/snap.yaml', 'bin/k1vpnd', 'bin/k1vpn-launch',
+  'meta/gui/k1vpn.desktop', 'meta/gui/k1vpn.png',
   'usr/bin/gdbus',
   'meta/polkit/k1vpn-polkit.network-control.policy',
   'k1vpn/k1vpn', 'k1vpn/resources/app.asar',
@@ -38,7 +39,11 @@ if (manifest.status !== 0 || !/^confinement: strict\s*$/m.test(manifest.stdout) 
   throw new Error('Expected a strictly confined core26 Snap with grade: stable')
 }
 if (!/^\s+allow-sandbox: false\s*$/m.test(manifest.stdout)) {
-  throw new Error('Expected browser-support without the privileged Chromium sandbox')
+  throw new Error('Expected browser-support with Chromium sandboxing disabled')
+}
+const desktop = spawnSync('unsquashfs', ['-cat', artifact, 'meta/gui/k1vpn.desktop'], { encoding: 'utf8' })
+if (desktop.status !== 0 || !desktop.stdout.includes('Icon=${SNAP}/meta/gui/k1vpn.png')) {
+  throw new Error('Expected the desktop launcher to use the packaged PNG icon')
 }
 const launcher = spawnSync('unsquashfs', ['-cat', artifact, 'bin/k1vpn-launch'], { encoding: 'utf8' })
 if (launcher.status !== 0 || !launcher.stdout.includes('exec "$SNAP/k1vpn/k1vpn" --no-sandbox "$@"')) {

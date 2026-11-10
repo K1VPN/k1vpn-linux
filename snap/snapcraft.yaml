@@ -6,6 +6,7 @@ summary: K1VPN secure VPN client
 description: |
   Official K1VPN client for Linux: full-tunnel WireGuard with a kill switch,
   DNS inside the tunnel and per-request polkit authorization.
+icon: snap/gui/k1vpn.png
 license: GPL-3.0-only
 contact: https://k1vpn.com/en/contact/
 issues: https://github.com/K1VPN/k1vpn-linux/issues

@@ -28,9 +28,18 @@ Inter's license: `src/renderer/src/assets/fonts/Inter-LICENSE.txt`.
 | TypeScript | 7.0.2 | Apache-2.0 |
 | electron-builder | 26.18.0 | MIT |
 
-WireGuard tools (GPL-2.0), nftables (GPL-2.0), iproute2 and required libraries
-are staged from Ubuntu 26.04. Package licenses remain under `usr/share/doc`
-in the Snap. WireGuard's kernel implementation is supplied by the host.
+## Packaged system utilities
+
+| Component | Package | License |
+|---|---|---|
+| gdbus | libglib2.0-bin | LGPL-2.1-or-later |
+| iproute2 | iproute2 | GPL-2.0-only |
+| nftables | nftables | GPL-2.0-only |
+| WireGuard tools | wireguard-tools | GPL-2.0-only |
+
+These utilities and their copyright files are staged from Ubuntu 26.04. The
+complete package notices are included under `usr/share/doc` in the Snap.
+WireGuard's kernel implementation is supplied by the host.
 
 These tables summarize direct components. Complete terms are in the individual
 packages and their license files.
