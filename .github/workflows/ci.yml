@@ -17,7 +17,8 @@ concurrency:
 jobs:
   build-test-snap:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    # A full strict core26 Snap build can exceed one hour on a cold runner.
+    timeout-minutes: 120
 
     steps:
       - name: Check out source
