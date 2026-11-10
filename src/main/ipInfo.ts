@@ -43,7 +43,11 @@ export function fetchPublicIp(signal?: AbortSignal, key = __K1VPN_CLIENT_IP_KEY_
   if (signal?.aborted) return Promise.reject(new PublicIpError('NETWORK'))
   return new Promise((resolve, reject) => {
     let complete = false
-    const agent = new https.Agent({ keepAlive: false, maxSockets: 1 })
+    // Electron otherwise abandons each address after 250ms, too soon for distant VPN exits.
+    const agent = new https.Agent({
+      keepAlive: false, maxSockets: 1,
+      autoSelectFamily: true, autoSelectFamilyAttemptTimeout: 1500
+    })
     const finish = (error?: PublicIpError, value?: PublicIpInfo): void => {
       if (complete) return
       complete = true

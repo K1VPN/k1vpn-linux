@@ -6,7 +6,7 @@ Third-party components retain their own licenses.
 
 | Component | Version | License |
 |---|---:|---|
-| Electron | 45.1.0 | MIT |
+| Electron | 45.2.3 | MIT |
 | React | 19.3.1 | MIT |
 | React DOM | 19.3.1 | MIT |
 | country-flag-icons | 1.6.20 | MIT |

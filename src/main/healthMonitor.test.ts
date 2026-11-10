@@ -54,6 +54,29 @@ afterEach(() => {
 })
 
 describe('HealthMonitor', () => {
+  it('allows an immediate IP retry after automatic disconnected lookups are exhausted', async () => {
+    const probe = vi.fn(async () => { throw new Error('temporary lookup failure') })
+    const { monitor } = build({ probe, windowVisible: true, random: () => 0 })
+    monitor.start()
+    await vi.advanceTimersByTimeAsync(120_000)
+    const attempts = probe.mock.calls.length
+    expect(attempts).toBe(5)
+    monitor.retryAddressLookup()
+    await vi.advanceTimersByTimeAsync(10)
+    expect(probe).toHaveBeenCalledTimes(attempts + 1)
+  })
+
+  it('keeps retrying a failed IP lookup on a connected tunnel without minute-long backoff', async () => {
+    const probe = vi.fn(async () => { throw new Error('temporary lookup failure') })
+    const { monitor } = build({ status: async () => connected, probe, random: () => 0 })
+    monitor.start()
+    await vi.advanceTimersByTimeAsync(120_000)
+    const attempts = probe.mock.calls.length
+    await vi.advanceTimersByTimeAsync(20_000)
+    expect(probe.mock.calls.length).toBeGreaterThan(attempts)
+    expect(monitor.get().ipState).toBe('unavailable')
+  })
+
   it('checks the tunnel immediately and confirms protection even when IP lookup is unavailable', async () => {
     const verify = vi.fn(async () => 'verified' as const)
     const { monitor } = build({

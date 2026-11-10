@@ -15,6 +15,9 @@ import {
 } from '../lib/serverCache'
 import { computeVirtualRange, virtualListHeight } from '../lib/virtualRange'
 import { AppIcon } from '../components/AppIcon'
+import { SnapPermissionHelp } from '../components/SnapPermissionHelp'
+import { isSnapPermissionMessage } from '../../../shared/snapPermissions'
+import { ipLookupFailed } from '../lib/ipDisplay'
 import { Brand } from '../components/Brand'
 import { availableSelectedServer, connectPreferences } from '../lib/connectPreferences'
 import { useConnectPreferences } from '../lib/useConnectPreferences'
@@ -40,6 +43,7 @@ export default function ConnectScreen({ account, onMenu }: Props): React.JSX.Ele
   const health = useHealth()
   const { display, publicIp, ipState, reason } = health
   const autoConnectError = useAutoConnectError()
+  const [copiedPermissionErrorId, setCopiedPermissionErrorId] = useState<number | null>(null)
   // The list belongs to the signed-in session and survives navigation and network loss.
   const [cachedList] = useState(() => readServerList(account.username))
   const [needsFetch] = useState(() => serverListFetchNeeded(account.username))
@@ -64,11 +68,7 @@ export default function ConnectScreen({ account, onMenu }: Props): React.JSX.Ele
   const addressPending =
     display === 'verifying' && (reason === 'ip-unavailable' || reason === 'ip-unchanged')
   const addressSlow = useAfterDelay(addressPending, ADDRESS_GRACE_MS)
-  // "Could not verify" only for real faults, never while a connection is being set up or confirmed.
-  const ipFailed =
-    display === 'unknown' ||
-    isNoInternet ||
-    (display === 'disconnected' && ipState === 'unavailable')
+  const ipFailed = ipLookupFailed(display, ipState)
 
   const serverRequest = useRef(0)
   // Fetches the list for `request`; a newer request (or leaving the screen) makes its answer stale.
@@ -228,11 +228,15 @@ export default function ConnectScreen({ account, onMenu }: Props): React.JSX.Ele
         </button>
       </div>
 
-      {autoConnectError && (
+      {autoConnectError && autoConnectError.id !== copiedPermissionErrorId && (
         <div className="form-error auto-connect-error" role="alert">
-          <span>
+          <div>
             {t('autoConnectFailedLabel')}: {t(autoConnectErrorReason(autoConnectError.code))}
-          </span>
+            {autoConnectError.code === 'SNAP_PERMISSION' && <SnapPermissionHelp onCopied={() => {
+              setCopiedPermissionErrorId(autoConnectError.id)
+              void getHealthStore().acknowledgeAutoConnectError(autoConnectError.id).catch(() => {})
+            }} />}
+          </div>
           <button
             className="auto-connect-error-dismiss"
             type="button"
@@ -366,7 +370,16 @@ export default function ConnectScreen({ account, onMenu }: Props): React.JSX.Ele
               ) : (
                 <span className="ip-placeholder">
                   {ipFailed ? (
-                    t('ipUnavailable')
+                    <>
+                      {t('ipUnavailable')}
+                      <button className="ip-retry" type="button"
+                        disabled={isTransitioning || health.network === 'down'}
+                        onClick={() => {
+                          void window.api.vpn.health.retryAddress().catch((e: unknown) => {
+                            setError(e instanceof Error ? cleanIpcErrorMessage(e.message) : t('autoConnectErrorGeneric'))
+                          })
+                        }}>{t('retry')}</button>
+                    </>
                   ) : (
                     <>
                       <span className="loading-dot" aria-hidden="true" />
@@ -503,8 +516,11 @@ export default function ConnectScreen({ account, onMenu }: Props): React.JSX.Ele
 
       <div className="connect-controls">
         {error && (
-          <div className="form-error" role="alert">
-            {error}
+          <div className={`form-error${isSnapPermissionMessage(error) ? ' snap-permission-error' : ''}`} role="alert">
+            {isSnapPermissionMessage(error) ? <>
+              {t('autoConnectErrorSnapPermission')}
+              <SnapPermissionHelp onCopied={() => setError('')} />
+            </> : error}
           </div>
         )}
 

@@ -33,7 +33,7 @@
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
     "country-flag-icons": "1.6.20",
-    "electron": "45.1.0",
+    "electron": "45.2.3",
     "electron-builder": "26.18.0",
     "electron-vite": "6.0.0",
     "react": "19.3.1",

@@ -10,9 +10,7 @@ import SettingsScreen from './screens/SettingsScreen'
 import DnsScreen from './screens/DnsScreen'
 import AboutScreen from './screens/AboutScreen'
 import './assets/main.css'
-import titlebarIconUrl from './assets/branding/k1vpn-favicon.svg'
 import { Brand } from './components/Brand'
-import { getCapabilities } from './platform/capabilities'
 import { useLanguage } from './i18n/useLanguage'
 import { RecoveryGate } from './components/RecoveryGate'
 import { getHealthStore } from './lib/useHealth'
@@ -32,23 +30,8 @@ function HealthRunner({ children }: { children: React.ReactNode }): React.JSX.El
 }
 
 function App(): React.JSX.Element {
-  const capabilities = getCapabilities()
   return (
     <LanguageProvider>
-      {capabilities.customTitleBar && (
-        <>
-          <div className="titlebar-drag">
-            <img className="titlebar-icon" src={titlebarIconUrl} alt="" />
-            K1VPN
-          </div>
-        </>
-      )}
-      {(capabilities.customTitleBar || capabilities.systemVpnProtection) && (
-        <div
-          className={`titlebar-separator${capabilities.customTitleBar ? '' : ' titlebar-separator--native'}`}
-          aria-hidden="true"
-        />
-      )}
       <HealthRunner>
         <RecoveryGate>
           <Screens />

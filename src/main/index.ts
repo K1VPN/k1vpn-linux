@@ -1,4 +1,5 @@
-import { app, BrowserWindow, dialog, ipcMain, powerMonitor, safeStorage, session, shell, type IpcMainInvokeEvent } from 'electron'
+import { app, BrowserWindow, clipboard, dialog, ipcMain, powerMonitor, safeStorage, session, shell, type IpcMainInvokeEvent } from 'electron'
+import { SNAP_PERMISSION_COMMAND } from '../shared/snapPermissions'
 import { existsSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -8,7 +9,8 @@ import { daemonRequest } from './daemonClient'
 import { HealthMonitor } from './healthMonitor'
 import { SettingsStore } from './settingsStore'
 import { AutoStartManager, autoStartExecutable } from './autoStart'
-import { CredentialStore, type CredentialCrypto } from './credentialStore'
+import { CredentialStore } from './credentialStore'
+import { createCredentialCrypto, SECRET_PORTAL_FEATURES } from './credentialCrypto'
 import { assertTrustedIpcSource } from './ipcPolicy'
 import { parseLanguage, parseLoginInput } from './ipcValidation'
 import { SignedOutStore } from './sessionStore'
@@ -90,6 +92,7 @@ function registerIpcHandlers(health: HealthMonitor, settings: SettingsStore, aut
   }
 
   handle('app:quit', () => desktop.quit())
+  handle('app:copyNetworkPermissionCommand', () => { clipboard.writeText(SNAP_PERMISSION_COMMAND) })
   handle('app:setLanguage', (_event, language: unknown) => { desktop.setLanguage(parseLanguage(language)) })
   handle('updates:get', () => ({ status: 'disabled', current: app.getVersion() }))
   handle('updates:check', () => ({ status: 'disabled', current: app.getVersion() }))
@@ -112,6 +115,7 @@ function registerIpcHandlers(health: HealthMonitor, settings: SettingsStore, aut
   handle('vpn:health', () => health.get())
   handle('vpn:health:refresh', () => health.refresh())
   handle('vpn:health:allowLookup', () => health.allowAddressLookup())
+  handle('vpn:health:retryAddress', () => health.retryAddressLookup())
   handle('vpn:listServers', () => auth.listServers())
   handle('vpn:ping', () => daemonRequest('ping'))
   handle('vpn:status', () => daemonRequest('status'))
@@ -166,9 +170,10 @@ function registerIpcHandlers(health: HealthMonitor, settings: SettingsStore, aut
 function createWindow(trustedWebContents: Set<number>): BrowserWindow {
   const window = new BrowserWindow({
     width: 420,
-    height: 720,
-    minWidth: 380,
-    minHeight: 640,
+    height: 640,
+    resizable: false,
+    maximizable: false,
+    fullscreenable: false,
     show: false,
     autoHideMenuBar: true,
     title: 'K1VPN',
@@ -210,6 +215,8 @@ function createWindow(trustedWebContents: Set<number>): BrowserWindow {
 }
 
 if (process.platform === 'linux') {
+  const enabled = app.commandLine.getSwitchValue('enable-features')
+  app.commandLine.appendSwitch('enable-features', [enabled, SECRET_PORTAL_FEATURES].filter(Boolean).join(','))
   app.setDesktopName(process.env.SNAP_NAME === 'k1vpn' ? 'k1vpn_k1vpn.desktop' : 'k1vpn.desktop')
   app.commandLine.appendSwitch('class', 'k1vpn')
 }
@@ -226,17 +233,7 @@ if (!hasSingleInstanceLock) {
   app.whenReady().then(async () => {
     installContentSecurityPolicy()
     const settings = await SettingsStore.open(join(app.getPath('userData'), 'preferences.json'))
-    const credentialCrypto: CredentialCrypto = {
-      isAvailable: async () => {
-        if (process.platform !== 'linux' || !(await safeStorage.isAsyncEncryptionAvailable())) return false
-        return ['gnome_libsecret', 'kwallet', 'kwallet5', 'kwallet6'].includes(safeStorage.getSelectedStorageBackend())
-      },
-      encrypt: (plaintext) => safeStorage.encryptStringAsync(plaintext),
-      decrypt: async (ciphertext) => {
-        const result = await safeStorage.decryptStringAsync(ciphertext)
-        return { plaintext: result.result, shouldReEncrypt: result.shouldReEncrypt }
-      }
-    }
+    const credentialCrypto = createCredentialCrypto(safeStorage)
     const credentials = new CredentialStore(join(app.getPath('userData'), 'credentials.dat'), credentialCrypto)
     const signedOut = new SignedOutStore(join(app.getPath('userData'), 'signed-out'))
     const auth = new AuthManager(credentials, signedOut)

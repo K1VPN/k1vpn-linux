@@ -17,7 +17,7 @@ const POLL: Duration = Duration::from_millis(20);
 
 pub const MISSING_MESSAGE: &str = "K1VPN needs permission to manage the network. In a terminal, run: \
 sudo snap connect k1vpn:network-control && sudo snap connect k1vpn:firewall-control && \
-sudo snap connect k1vpn:k1vpn-polkit :polkit";
+sudo snap connect k1vpn:k1vpn-polkit :polkit && sudo snap restart k1vpn.k1vpnd";
 
 /// True outside a Snap. Inside one, false only when snapd reports a required
 /// plug as disconnected; if snapctl itself cannot answer, the operation runs

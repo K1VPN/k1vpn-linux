@@ -15,7 +15,7 @@ use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::thread;
 use std::time::Duration;
-use zeroize::Zeroize;
+use zeroize::{Zeroize, Zeroizing};
 
 const IO_TIMEOUT: Duration = Duration::from_secs(2);
 const MAX_CONNECTIONS: usize = 32;
@@ -71,7 +71,7 @@ fn serve_connection(
     stream.set_read_timeout(Some(IO_TIMEOUT))?;
     stream.set_write_timeout(Some(IO_TIMEOUT))?;
 
-    let mut input = Vec::new();
+    let mut input = Zeroizing::new(Vec::new());
     let mut reader = BufReader::new(&stream).take((MAX_MESSAGE_BYTES + 1) as u64);
     reader.read_until(b'\n', &mut input)?;
     if input.last() == Some(&b'\n') {
@@ -79,6 +79,13 @@ fn serve_connection(
         if input.last() == Some(&b'\r') {
             input.pop();
         }
+    }
+    if input.len() > MAX_MESSAGE_BYTES {
+        input.zeroize();
+        return write_response(
+            &mut stream,
+            &protocol::error(0, "message_too_large", "request exceeds the protocol limit"),
+        );
     }
     if let Some(request_id) = protocol::authorization_request_id(&input) {
         if !snap::required_interfaces_connected() {
@@ -144,6 +151,35 @@ fn serve_connection(
     }
     let recovery_required = manager.recovery_required();
     write_response(&mut stream, &protocol::handle(&input, recovery_required))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn oversized_mutations_are_rejected_before_authorization_or_execution() {
+        let (mut client, server) = UnixStream::pair().unwrap();
+        client.set_read_timeout(Some(IO_TIMEOUT)).unwrap();
+        let active = Arc::new(AtomicUsize::new(1));
+        let slot = ConnectionSlot(Arc::clone(&active));
+        let manager = Arc::new(Mutex::new(TunnelManager::new(RecoveryJournal::new(
+            "/unused-k1vpn-test-journal",
+        ))));
+        let worker = thread::spawn(move || {
+            serve_connection(server, slot, manager, Arc::new(AtomicBool::new(false)))
+        });
+        let mut request = br#"{"v":1,"id":1,"method":"disconnect","params":{}}"#.to_vec();
+        request.resize(MAX_MESSAGE_BYTES + 1, b' ');
+        request.push(b'\n');
+        client.write_all(&request).unwrap();
+        let mut response = String::new();
+        BufReader::new(client).read_line(&mut response).unwrap();
+        worker.join().unwrap().unwrap();
+        let response: serde_json::Value = serde_json::from_str(&response).unwrap();
+        assert_eq!(response["error"]["code"], "message_too_large");
+        assert_eq!(active.load(Ordering::Acquire), 0);
+    }
 }
 
 pub fn run() -> io::Result<()> {

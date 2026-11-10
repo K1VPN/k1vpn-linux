@@ -74,55 +74,6 @@ textarea {
   height: 100vh;
   height: 100dvh;
 }
-/* Set on #root itself (see main.tsx) only where a titlebar is actually drawn. */
-#root.with-titlebar {
-  padding-top: 32px;
-}
-
-.titlebar-drag {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-left: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-2);
-  background: var(--bg);
-  -webkit-app-region: drag;
-  z-index: 1000;
-}
-/* Sits just below the 32px titlebar, outside the rect the native caption
-   buttons (min/max/close) are drawn in — a shadow placed on the titlebar
-   itself gets clipped there since the OS paints over it. */
-.titlebar-separator {
-  position: fixed;
-  /* A couple of px of clearance below the titlebar: at fractional DPI scale
-     factors the native caption-button rect can round to slightly more than
-     the requested 32px, and a separator flush against it gets a visible
-     seam where the buttons area ends. */
-  top: 34px;
-  left: 0;
-  right: 0;
-  height: 0;
-  box-shadow: 0 0 6px 1px rgba(0, 194, 255, 0.6);
-  z-index: 999;
-  pointer-events: none;
-}
-.titlebar-icon {
-  width: 16px;
-  height: 16px;
-  flex: none;
-}
-
-/* Leave room for the separator glow inside the application viewport. */
-.titlebar-separator--native {
-  top: 4px;
-}
 
 button,
 input,

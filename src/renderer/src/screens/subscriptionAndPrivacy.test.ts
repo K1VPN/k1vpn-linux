@@ -23,8 +23,7 @@ async function render(screen: Screen, language: 'en' | 'el'): Promise<string> {
         killSwitchToggle: false,
         updater: false,
         quit: false,
-        serviceRestart: false,
-        customTitleBar: false
+        serviceRestart: false
       }
     }
   }

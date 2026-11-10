@@ -2,6 +2,10 @@ import { spawnSync } from 'node:child_process'
 
 const artifact = process.argv[2]
 if (!artifact?.endsWith('.snap')) throw new Error('Pass the .snap artifact to inspect')
+const summary = spawnSync('unsquashfs', ['-s', artifact], { encoding: 'utf8' })
+if (summary.status !== 0 || !/^Fragments are not stored\s*$/m.test(summary.stdout) || !/^Number of fragments 0\s*$/m.test(summary.stdout)) {
+  throw new Error('Snap Store requires a SquashFS without fragments. Build with snapcraft pack; do not upload a manually repacked test Snap.')
+}
 const result = spawnSync('unsquashfs', ['-l', artifact], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 })
 if (result.status !== 0) throw new Error('Could not read Snap contents')
 const files = result.stdout.split('\n').filter(line => line.startsWith('squashfs-root/'))

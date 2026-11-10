@@ -13,6 +13,8 @@ source-code: https://github.com/K1VPN/k1vpn-linux
 website: https://k1vpn.com/en/
 grade: stable
 confinement: strict
+assumes:
+  - snapd2.43
 platforms:
   amd64:
 

@@ -75,6 +75,8 @@ export const NETWORK_EVENT_DEBOUNCE_MS = 250
 export const PROBE_BACKOFF_MS = [0, 1000, 2000, 4000, 8000, 15_000, 30_000, 60_000, 96_000]
 /** Lookups while disconnected stop after this many; while connected they continue until confirmed. */
 export const MAX_ADDRESS_ATTEMPTS = 5
+/** Keep a failed display lookup responsive while the tunnel itself is working. */
+export const CONNECTED_ADDRESS_RETRY_CAP_MS = 15_000
 /**
  * Delay before the n-th verification attempt in one stale spell; the last value repeats. The
  * floor is required: a verify() that settles synchronously would otherwise be asked again on the
@@ -177,6 +179,12 @@ export class HealthMonitor {
     if (this.addressLookupAllowed) return
     this.addressLookupAllowed = true
     if (this.addressWanted()) this.kick()
+  }
+
+  retryAddressLookup(): void {
+    this.probeAttempts = 0
+    this.probeNotBefore = 0
+    this.kick()
   }
 
   /**
@@ -317,7 +325,10 @@ export class HealthMonitor {
     this.probeNotBefore =
       this.now() +
       jitteredDelay(
-        PROBE_BACKOFF_MS[Math.min(attempt + 1, PROBE_BACKOFF_MS.length - 1)],
+        Math.min(
+          PROBE_BACKOFF_MS[Math.min(attempt + 1, PROBE_BACKOFF_MS.length - 1)],
+          this.state.tunnel === 'connected' ? CONNECTED_ADDRESS_RETRY_CAP_MS : Infinity
+        ),
         this.deps.random
       )
     this.deps.probe(controller.signal).then(

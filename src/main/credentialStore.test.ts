@@ -57,4 +57,23 @@ describe('CredentialStore', () => {
     await store.forget()
     expect(await store.read()).toBeNull()
   })
+
+  it('preserves usable credentials when key rotation cannot encrypt them again', async () => {
+    const { path, store, crypto } = await setup(true, true)
+    await store.save('k1_example', 'secret')
+    const original = await readFile(path, 'utf8')
+    vi.mocked(crypto.encrypt).mockRejectedValue(new Error('Provider became unavailable'))
+    expect(await store.read()).toEqual({ username: 'k1_example', password: 'secret' })
+    expect(await readFile(path, 'utf8')).toBe(original)
+    expect(await store.rememberedLogin()).toEqual({ username: 'k1_example' })
+  })
+
+  it('preserves usable credentials when the rotated file cannot be written', async () => {
+    const { path, store } = await setup(true, true)
+    await store.save('k1_example', 'secret')
+    const original = await readFile(path, 'utf8')
+    vi.spyOn(store, 'saveIfCurrent').mockRejectedValue(new Error('Disk write failed'))
+    expect(await store.read()).toEqual({ username: 'k1_example', password: 'secret' })
+    expect(await readFile(path, 'utf8')).toBe(original)
+  })
 })

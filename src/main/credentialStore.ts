@@ -83,19 +83,25 @@ export class CredentialStore {
       throw new CredentialStoreError('CREDENTIAL_STORE_UNAVAILABLE', 'Secure credential storage is unavailable. Configure Secret Service or KWallet and try again.')
     }
     const file = parseFile(raw)
+    let decrypted: { plaintext: string; shouldReEncrypt: boolean }
     try {
-      const decrypted = await this.crypto.decrypt(Buffer.from(file.ciphertext, 'base64'))
+      decrypted = await this.crypto.decrypt(Buffer.from(file.ciphertext, 'base64'))
       validateCredentials(file.username, decrypted.plaintext)
-      if (decrypted.shouldReEncrypt) {
-        await this.saveIfCurrent(file.username, decrypted.plaintext, () => {
-          try { return readFileSync(this.path, 'utf8') === raw } catch { return false }
-        })
-      }
-      return { username: file.username, password: decrypted.plaintext }
     } catch (error) {
       if (error instanceof CredentialStoreError) throw error
       throw new CredentialStoreError('CREDENTIAL_STORE_CORRUPT', 'Saved credentials could not be decrypted.')
     }
+    if (decrypted.shouldReEncrypt) {
+      try {
+        await this.saveIfCurrent(file.username, decrypted.plaintext, () => {
+          try { return readFileSync(this.path, 'utf8') === raw } catch { return false }
+        })
+      } catch {
+        // Rotation is best effort: the old ciphertext decrypted successfully.
+        // A provider or write failure must not invalidate it or block sign-in.
+      }
+    }
+    return { username: file.username, password: decrypted.plaintext }
   }
 
   async rememberedLogin(): Promise<{ username: string } | null> {

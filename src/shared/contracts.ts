@@ -11,11 +11,11 @@ export interface AutoConnectErrorInfo { id: number; code: string; message: strin
 export interface ClientApi {
   updates: { get(): Promise<UpdateState>; check(): Promise<UpdateState>; install(): Promise<UpdateState> }
   settings: { get(): Promise<Settings>; set(key: 'autoStart' | 'autoConnect' | 'killSwitch' | 'allowLocalNetwork', value: boolean): Promise<Settings>; setDns(mode: DnsMode, custom: string[]): Promise<Settings> }
-  app: { quit(): Promise<void>; setLanguage(language: 'el' | 'en'): Promise<void> }
+  app: { quit(): Promise<void>; setLanguage(language: 'el' | 'en'): Promise<void>; copyNetworkPermissionCommand(): Promise<void> }
   vpn: {
     restartService(): Promise<void>; ping(): Promise<unknown>; status(): Promise<unknown>; connect(serverId: string): Promise<unknown>; disconnect(): Promise<unknown>; listServers(): Promise<Server[]>; publicIp(): Promise<unknown>
     autoConnectError: { get(): Promise<AutoConnectErrorInfo | null>; acknowledge(id: number): Promise<void>; subscribe(listener: (error: unknown) => void): () => void }
-    health: { get(): Promise<HealthSnapshot>; refresh(): Promise<void>; allowLookup(): Promise<void>; subscribe(listener: (snapshot: unknown) => void): () => void }
+    health: { get(): Promise<HealthSnapshot>; refresh(): Promise<void>; allowLookup(): Promise<void>; retryAddress(): Promise<void>; subscribe(listener: (snapshot: unknown) => void): () => void }
   }
   auth: {
     forgetCredentials(): Promise<void>; login(username: string, password: string, remember: boolean): Promise<VpnAccountInfo>; getRememberedLogin(): Promise<{ username: string } | null>; loginWithSavedCredentials(): Promise<VpnAccountInfo>; restoreSession(): Promise<VpnAccountInfo | null>; refreshAccount(): Promise<VpnAccountInfo>; logout(): Promise<void>

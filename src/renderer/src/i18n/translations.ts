@@ -15,13 +15,15 @@ export const DEFAULT_LANGUAGE: Language = 'en'
 // first pass takes on.
 const en = {
   recoveryBlocked:
-    'A previous VPN session ended unexpectedly. Its network protection may still be blocking internet access.',
+    'K1VPN could not finish setting up or closing the VPN. Network settings need to be restored before continuing.',
+  recoveryFailed: 'Could not restore network settings. Please try again.',
+  recoveryWorking: 'Restoring network settings…',
   recoveryUnavailable: 'The VPN service is unavailable. Its protection status cannot be confirmed.',
   recoveryReleaseHint:
-    'Restoring internet access removes the remaining VPN protection. Traffic will use your normal connection until you connect to the VPN again.',
+    'This clears any remaining K1VPN network settings and VPN protection. Your normal internet connection will be used until you connect to the VPN.',
   recoveryRestartHint:
     'Start the service to check its status. This does not remove any remaining network protection.',
-  recoveryRelease: 'Remove protection and restore internet',
+  recoveryRelease: 'Restore network settings',
   recoveryRestart: 'Start VPN service',
   autoStart: 'Start at login',
   autoStartHint: 'Open K1VPN when you sign in.',
@@ -37,7 +39,11 @@ const en = {
   autoConnectErrorProtocol: 'The K1VPN server returned an unexpected response.',
   autoConnectErrorVpnPermission: 'The system did not grant K1VPN permission to create the VPN.',
   autoConnectErrorSnapPermission:
-    'K1VPN needs permission to manage the network. In a terminal, run: sudo snap connect k1vpn:network-control && sudo snap connect k1vpn:firewall-control && sudo snap connect k1vpn:k1vpn-polkit :polkit',
+    'K1VPN needs permission to manage the network.',
+  snapPermissionHint: 'Copy this command, paste it into a terminal and run it. Then return here and try connecting again.',
+  copyCommand: 'Copy command',
+  commandCopied: 'Command copied.',
+  commandCopyFailed: 'Could not copy. Select the command and copy it manually.',
   autoConnectErrorVpn: 'The VPN tunnel could not be started.',
   autoConnectErrorConfig: 'The VPN configuration for this server is invalid.',
   autoConnectErrorBusy: 'K1VPN was busy with another operation.',
@@ -216,14 +222,16 @@ const en = {
 
 const el: typeof en = {
   recoveryBlocked:
-    'Μια προηγούμενη σύνδεση VPN διακόπηκε απρόσμενα. Η προστασία δικτύου της μπορεί να εμποδίζει ακόμα την πρόσβαση στο internet.',
+    'Το K1VPN δεν ολοκλήρωσε τη ρύθμιση ή το κλείσιμο του VPN. Χρειάζεται επαναφορά των ρυθμίσεων δικτύου για να συνεχίσεις.',
+  recoveryFailed: 'Δεν ήταν δυνατή η επαναφορά των ρυθμίσεων δικτύου. Δοκίμασε ξανά.',
+  recoveryWorking: 'Επαναφορά ρυθμίσεων δικτύου…',
   recoveryUnavailable:
     'Η υπηρεσία VPN δεν είναι διαθέσιμη. Η κατάσταση προστασίας δεν μπορεί να επιβεβαιωθεί.',
   recoveryReleaseHint:
-    'Η αποκατάσταση του internet αφαιρεί την προστασία VPN που παραμένει ενεργή. Η κίνηση θα χρησιμοποιεί την κανονική σου σύνδεση μέχρι να συνδεθείς ξανά στο VPN.',
+    'Αφαιρούνται τυχόν ρυθμίσεις και προστασία δικτύου του K1VPN που έχουν παραμείνει. Θα χρησιμοποιείται η κανονική σου σύνδεση internet μέχρι να συνδεθείς στο VPN.',
   recoveryRestartHint:
     'Ξεκίνα την υπηρεσία για να ελεγχθεί η κατάστασή της. Αυτό δεν αφαιρεί την προστασία δικτύου που μπορεί να παραμένει ενεργή.',
-  recoveryRelease: 'Άρση προστασίας και αποκατάσταση internet',
+  recoveryRelease: 'Επαναφορά ρυθμίσεων δικτύου',
   recoveryRestart: 'Εκκίνηση υπηρεσίας VPN',
   autoStart: 'Εκκίνηση κατά τη σύνδεση',
   autoStartHint: 'Άνοιγμα του K1VPN όταν συνδέεστε.',
@@ -240,7 +248,11 @@ const el: typeof en = {
   autoConnectErrorProtocol: 'Ο server της K1VPN έστειλε μη αναμενόμενη απάντηση.',
   autoConnectErrorVpnPermission: 'Το σύστημα δεν έδωσε στο K1VPN άδεια για δημιουργία VPN.',
   autoConnectErrorSnapPermission:
-    'Το K1VPN χρειάζεται άδεια για τη διαχείριση του δικτύου. Σε ένα τερματικό, τρέξε: sudo snap connect k1vpn:network-control && sudo snap connect k1vpn:firewall-control && sudo snap connect k1vpn:k1vpn-polkit :polkit',
+    'Το K1VPN χρειάζεται άδεια για τη διαχείριση του δικτύου.',
+  snapPermissionHint: 'Αντέγραψε την εντολή, επικόλλησέ τη σε ένα τερματικό και εκτέλεσέ τη. Μετά επέστρεψε εδώ και δοκίμασε ξανά τη σύνδεση.',
+  copyCommand: 'Αντιγραφή εντολής',
+  commandCopied: 'Η εντολή αντιγράφηκε.',
+  commandCopyFailed: 'Η αντιγραφή απέτυχε. Επίλεξε την εντολή και αντέγραψέ τη χειροκίνητα.',
   autoConnectErrorVpn: 'Δεν ήταν δυνατή η εκκίνηση του VPN tunnel.',
   autoConnectErrorConfig: 'Οι ρυθμίσεις VPN για αυτόν τον server δεν είναι έγκυρες.',
   autoConnectErrorBusy: 'Το K1VPN εκτελούσε ήδη άλλη ενέργεια.',

@@ -181,10 +181,20 @@
 }
 .ip-placeholder {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   font-size: 12px;
   color: var(--text-2);
+}
+.ip-retry {
+  padding: 2px 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  cursor: pointer;
 }
 .loading-dot {
   width: 6px;
@@ -933,6 +943,42 @@
 .connect-controls .form-error {
   max-height: 64px;
   overflow-y: auto;
+}
+.connect-controls .snap-permission-error {
+  max-height: 240px;
+}
+.snap-permission-help {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.snap-permission-help p {
+  margin: 6px 0 0;
+}
+.snap-permission-command {
+  display: block;
+  padding: 8px;
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text-1);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+  cursor: text;
+}
+.snap-permission-copy {
+  justify-self: start;
+  padding: 7px 12px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.snap-permission-copy:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 .auto-connect-error {
   display: flex;
