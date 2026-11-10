@@ -17,8 +17,7 @@ concurrency:
 jobs:
   build-test-snap:
     runs-on: ubuntu-24.04
-    # A full strict core26 Snap build can exceed one hour on a cold runner.
-    timeout-minutes: 120
+    timeout-minutes: 60
 
     steps:
       - name: Check out source
@@ -71,7 +70,44 @@ jobs:
 
       - name: Build strict Snap
         id: snapcraft
-        uses: canonical/action-build@3bdaa03e1ba6bf59a65f84a751d943d549a54e79 # v1.3.0
+        env:
+          SNAPCRAFT_BUILD_ENVIRONMENT: lxd
+          SNAPCRAFT_BUILD_INFO: '1'
+          SNAPCRAFT_IMAGE_INFO: '{"build_url":"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
+        run: |
+          runner_username="$(id -un)"
+
+          if [ ! -x /usr/bin/snap ]; then
+            sudo apt-get update -q
+            sudo apt-get install -qy snapd
+          fi
+          if [ "$(stat -c '%u:%g' /)" != '0:0' ]; then
+            sudo chown root:root /
+          fi
+
+          if [ -x /usr/bin/lxd ]; then
+            sudo apt-get remove -qy lxd lxd-client
+          fi
+          sudo groupadd --force --system lxd
+          sudo usermod --append --groups lxd "$runner_username"
+          if [ -x /snap/bin/lxd ]; then
+            sudo snap refresh lxd || true
+          else
+            sudo snap install lxd
+          fi
+          sudo lxd init --auto
+          sudo iptables -P FORWARD ACCEPT
+
+          if [ -x /snap/bin/snapcraft ]; then
+            sudo snap refresh --channel stable --classic snapcraft
+          else
+            sudo snap install --channel stable --classic snapcraft
+          fi
+          sudo -u "$runner_username" -E snapcraft
+
+          snap_file="$(find "$GITHUB_WORKSPACE" -maxdepth 1 -type f -name '*.snap' -print -quit)"
+          test -n "$snap_file"
+          echo "snap=$snap_file" >> "$GITHUB_OUTPUT"
 
       - name: Inspect Snap contents
         run: |
