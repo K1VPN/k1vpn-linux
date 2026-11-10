@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="snap/gui/k1vpn.png" alt="K1VPN logo" width="112" />
+  <img src="https://raw.githubusercontent.com/K1VPN/.github/main/assets/k1vpn-wordmark.png" alt="K1VPN® full logo" width="520" />
   <h1>K1VPN for Linux</h1>
   <p><strong>The official K1VPN desktop client for Linux.</strong></p>
   <p>A WireGuard VPN app with full-tunnel routing, in-tunnel DNS and an optional kill switch.</p>
